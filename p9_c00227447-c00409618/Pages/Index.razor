@@ -1,0 +1,91 @@
+// Jahzah Jenkins, Tomas Parker
+// c00227447 c00409618
+// CMPS 358 
+// project #9
+
+@page "/"
+
+@using p9_c00227447_c00409618.Models
+@using Microsoft.AspNetCore.Components
+@inject p9_c00227447_c00409618.Data.InventoryContext _context
+
+@code {
+
+    private InventoryItem inventoryItem = new InventoryItem();
+
+    private async void HandleValidSubmit()
+    {
+        try
+        {
+            _context.Add(inventoryItem);
+            await _context.SaveChangesAsync();
+        }
+        catch
+        {
+            base.StateHasChanged();
+        }
+        inventoryItem = new InventoryItem();
+        base.StateHasChanged();
+    }
+    //
+    private IOrderedQueryable<InventoryItem> GetAllInventoryItems()
+    {
+        try
+        {
+            var results =
+                from row in _context.InventoryItems
+                orderby row.Location
+                select row;
+            if (!results.Any())
+            {
+                return null;
+            }
+            return results;
+        }
+        catch
+        {
+            return null;
+        }
+        return null;
+    }
+    private async void DeleteThisInventoryItem(InventoryItem i)
+    {
+        _context.InventoryItems.Remove(i);
+        _context.SaveChanges();
+    }
+
+}
+
+<div class="item-form">
+    <EditForm Model=@inventoryItem OnValidSubmit=@HandleValidSubmit>
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="form-group">
+            <label for="ItemName">ItemName</label>
+            <InputText id="ItemName" class="form-control" 
+                       @bind-Value="inventoryItem.ItemName" />
+        </div>
+        <div class="form-group">
+            <label for="Location">Location</label>
+            <InputTextArea id="Location" class="form-control" 
+                           @bind-Value="inventoryItem.Location" />
+        </div>
+        <div class="form-group">
+            <label for="Value">Value</label>
+            <InputNumber id="Value" class="form-control" 
+                         @bind-Value="inventoryItem.Value" />
+        </div>
+        <button class="btn btn-primary" type="submit">
+            Add Item</button>
+    </EditForm>
+    <div class="item-display">
+        <br/>
+         InventoryItems:<br/><br/>
+         @foreach (var i in GetAllInventoryItems())
+         {
+             <div><span class="btn btn-primary" @onclick="@(() => { DeleteThisInventoryItem(i); })">Delete</span>
+                 @i.Location,
+                 @i.Value, Item: @i.ItemName
+             </div>
+         }</div>
+</div>
